@@ -69,3 +69,10 @@ def test_external_market_claim_is_not_promoted_to_fact():
     assert "market" in update.state.external_claims[-1]["topic"]
     assert "market_change" not in update.state.customer
 
+
+def test_natural_mortgage_and_flood_phrasing_still_produce_typed_state():
+    state = ConversationState(call_id="call-1")
+    mortgage = apply_final_utterance(state, utterance("My mortgage is approved"))
+    flood = apply_final_utterance(mortgage.state, utterance("I am worried this area floods", sequence=2))
+    assert mortgage.state.customer["mortgage_approval"]["value"] == "approved"
+    assert flood.state.external_claims[-1]["topic"] == "environment"

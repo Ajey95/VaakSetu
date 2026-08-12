@@ -9,10 +9,12 @@ __pycache__/
 htmlcov/
 node_modules/
 dist/
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
 playwright-report/
 test-results/
 .DS_Store
 *.log
 evals/results/*.json
 !evals/results/baseline.json
-

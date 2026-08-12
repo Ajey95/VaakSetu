@@ -1,0 +1,3 @@
+# Synthetic Data Disclosure
+
+Default mode simulates call lifecycle, transcript input, LLM structured output and one official-looking UK HPI fixture because credentials are not yet present. The UI always displays “Synthetic demonstration”; source titles include “synthetic fixture”; health reports provider mode; README explains replacement. Synthetic mode shares state, triggers, orchestration, evidence, summary, reconnect, memory and fault interfaces with real mode, but cannot substantiate a live call or provider performance. Set credentials and `APP_MODE=real`; never remove labeling while any adapter remains synthetic.

@@ -46,7 +46,7 @@ def apply_final_utterance(state: ConversationState, utterance: Utterance) -> Con
         value = int(float(budget.group(1).replace(",", "")) * (1000 if budget.group(2) else 1))
         customer["budget"] = _record(value, utterance)
         changes.append("budget")
-    mortgage = re.search(r"mortgage\s+(approved|approval|agreement in principle|aip|not approved|pending)", lower)
+    mortgage = re.search(r"mortgage\s+(?:is\s+)?(approved|approval|agreement in principle|aip|not approved|pending)", lower)
     if mortgage:
         raw = mortgage.group(1)
         value = "approved" if raw in {"approved", "approval", "agreement in principle", "aip"} else raw
@@ -108,7 +108,7 @@ def apply_final_utterance(state: ConversationState, utterance: Utterance) -> Con
 
     claims = (
         ("market", r"\b(prices?|house prices?|market).{0,35}\b(fell|fallen|dropped|drop|rose|risen|up|down)\b|\b(fell|dropped)\s+\d+%"),
-        ("environment", r"\b(flood|flooding|environmental risk)\b"),
+        ("environment", r"\b(flood|floods|flooding|environmental risk)\b"),
         ("mortgage_rates", r"\b(mortgage rates?|interest rates?).{0,30}\b(falling|rising|down|up)\b"),
         ("energy", r"\b(epc|energy efficient|energy rating)\b"),
     )
@@ -123,4 +123,3 @@ def apply_final_utterance(state: ConversationState, utterance: Utterance) -> Con
         updated.current_recommendation["stale_reason"] = "stage_changed"
         invalidation.append("stage_changed")
     return ConversationUpdate(updated, list(dict.fromkeys(changes)), invalidation)
-
