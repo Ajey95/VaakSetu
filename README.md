@@ -35,6 +35,7 @@ Render's free service may sleep when idle, so the first API request can take lon
 | Research the domain and design prompts | Buyer/vendor discovery and progression model, bounded structured prompts, retrieval rules, safety constraints, and abstention behavior |
 | Explain production evolution | Explicit prototype bottlenecks, horizontal streaming gateways, Redis hot state, durable event bus, workers, multi-tenancy, security, SLOs, and cost controls |
 | Deliver a working full-stack prototype | React 19/Vite frontend on Vercel and Python 3.12/FastAPI backend on Render, with local synthetic and real-provider modes |
+| Provide a reproducible end-to-end walkthrough | One-click **Demo** flow that automatically creates a synthetic call, plays six agent/customer turns, surfaces facts, objection, evidence and coaching, then completes with a structured summary |
 
 ### Product and engineering additions
 
@@ -239,6 +240,12 @@ npm --workspace apps/web run dev
 
 Open `http://localhost:5173`.
 
+### One-click automated demo
+
+Click **Demo** beside **Call** to run the complete deterministic buyer scenario. No phone number, Twilio call, or microphone permission is needed. The UI progressively shows six speaker-labelled turns, qualification facts, a price objection, a market claim with evidence handling, a viewing commitment, and the final call summary. **Cancel demo** safely completes the synthetic session if the walkthrough is interrupted.
+
+This path calls the real FastAPI orchestration endpoints using synthetic input; it is not a hard-coded summary screen. It is deliberately separate from **Call**, which remains the live Twilio and microphone path.
+
 ### Real-provider mode
 
 1. Copy `.env.example` to `.env` and populate the server-side provider variables. Never commit `.env`.
@@ -292,14 +299,14 @@ Latest recorded result:
 
 | Check | Result |
 |---|---:|
-| Backend unit/integration | 110 passed |
-| Frontend component/contract | 15 passed |
+| Backend unit/integration | 111 passed |
+| Frontend component/contract | 22 passed |
 | TypeScript typecheck | Passed |
 | Vite production build | Passed |
-| Playwright desktop + Pixel 7 | 4 passed |
+| Playwright desktop + Pixel 7 | 6 passed |
 | Offline evaluation scenarios | 28/28 passed |
 | Intelligence-plane fault scenarios | 13/13 kept the call connected |
-| Total automated checks | 170 passed |
+| Total automated checks | 180 passed |
 
 Automated provider contract tests are not evidence of carrier behavior. The exact SSOT 35-step real-call acceptance rehearsal remains the final live gate.
 

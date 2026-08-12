@@ -29,7 +29,7 @@ The delivered system includes:
 - PostgreSQL/pgvector and temporal Neo4j implementations with in-memory fallbacks;
 - pre-call briefs, post-call summaries, recommendation feedback, and memory;
 - end-to-end correlation, safe logs, metrics, traces, trajectories, and asynchronous evaluation;
-- 170 passing automated checks across backend, frontend, browser, evaluation, and fault behavior;
+- 180 passing automated checks across backend, frontend, browser, evaluation, and fault behavior;
 - Vercel and Render deployments with real Twilio, STT, LLM, and external-source configuration.
 
 The final claim boundary is explicit: no submission artifact treats automated provider-contract tests as proof of carrier behavior. The exact 35-step SSOT acceptance sequence still requires one recorded two-human phone rehearsal. PostgreSQL and Neo4j are implemented and contract-tested, but the public API currently reports those two durable providers as not attached.
@@ -629,11 +629,11 @@ The full credential-independent suite is reproducible from the repository README
 
 | Verification layer | Result | What it proves | What it does not prove |
 |---|---:|---|---|
-| Python unit/integration | 110 passed | Reducer, events, routes, adapters, resilience, memory, observability | Carrier/provider network behavior |
-| React component/contracts | 15 passed | Rendering, reducer authority, provider readiness, interaction contracts | Real microphone/browser permissions |
+| Python unit/integration | 111 passed | Reducer, events, routes, adapters, resilience, memory, observability | Carrier/provider network behavior |
+| React component/contracts | 22 passed | Rendering, reducer authority, provider readiness, interaction contracts, automated demo control | Real microphone/browser permissions |
 | TypeScript | Passed | Static contract correctness | Runtime provider behavior |
 | Vite production build | Passed | Deployable frontend bundle | Visual correctness on every device |
-| Playwright | 4 passed | Desktop and Pixel 7 flows, responsive no-overflow behavior | Live phone conversation |
+| Playwright | 6 passed | Desktop and Pixel 7 flows, responsive no-overflow behavior, one-click synthetic demo and no-microphone contract | Live phone conversation |
 | Offline evaluations | 28/28 | Seed buyer/vendor/context/recovery expectations | General model quality in production |
 | Fault injection | 13/13 | Intelligence-plane failures preserve connected call state | Carrier-side outage recovery |
 | Public HTTP smoke | Passed | Vercel and Render URLs respond; backend reports real mode | Full Twilio/Deepgram audio path |

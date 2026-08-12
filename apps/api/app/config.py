@@ -102,7 +102,7 @@ class Settings(BaseSettings):
             report[provider] = ProviderReadiness(
                 configured=not missing,
                 blocking=self.app_mode is AppMode.REAL and provider in realtime and bool(missing),
-                mode=self.app_mode.value if missing else "real",
+                mode="synthetic" if self.app_mode is AppMode.SYNTHETIC else ("unconfigured" if missing else "real"),
                 missing=missing,
             )
         return report

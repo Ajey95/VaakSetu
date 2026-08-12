@@ -1,9 +1,10 @@
 from fastapi.testclient import TestClient
+from app.config import AppMode, Settings
 from app.main import create_app
 
 
 def test_health_discloses_synthetic_mode_and_provider_readiness():
-    with TestClient(create_app()) as client:
+    with TestClient(create_app(Settings(_env_file=None, app_mode=AppMode.SYNTHETIC))) as client:
         health = client.get("/health").json()
         providers = client.get("/health/providers").json()
         assert health == {"status": "ok", "mode": "synthetic"}
@@ -42,4 +43,3 @@ def test_call_summary_feedback_evidence_and_history_routes():
         assert client.get("/customers/customer-1/precall-brief").json()["source_call_id"] == call_id
         assert client.get("/customers/customer-1/history").json()[0]["call_id"] == call_id
         assert client.post("/recommendations/rec-1/feedback", json={"useful": False, "reason": "too_late"}).status_code == 201
-

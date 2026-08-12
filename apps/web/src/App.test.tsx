@@ -4,6 +4,7 @@ import App from './App'
 import { ModeBanner } from './components/ModeBanner'
 import { ProviderReadiness } from './components/ProviderReadiness'
 import { SummaryPanel } from './components/SummaryPanel'
+import { CallPanel } from './components/CallPanel'
 
 describe('sales coach workspace', () => {
   it('shows explicit synthetic mode and all required health domains', () => {
@@ -37,6 +38,17 @@ describe('sales coach workspace', () => {
     fireEvent.change(screen.getByLabelText(/phone number/i), { target: { value: 'Ajay' } })
     fireEvent.click(screen.getByRole('button', { name: /^call$/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/valid phone/i)
+  })
+  it('exposes a one-click automated demo control with visible progress', () => {
+    const onDemo = vi.fn()
+    render(<CallPanel phone="" setPhone={vi.fn()} status="idle" error="" onCall={vi.fn()} onHangup={vi.fn()}
+      onDemo={onDemo} demoStatus="running" demoProgress="Step 2 of 6: Buyer requirements"
+      customer={{}} signals={[]} objections={[]} commitments={[]} sensitive={[]} />)
+
+    const demo = screen.getByRole('button', { name: /demo running/i })
+    expect(demo).toBeDisabled()
+    expect(screen.getByRole('status')).toHaveTextContent('Step 2 of 6: Buyer requirements')
+    expect(onDemo).not.toHaveBeenCalled()
   })
   it('renders coaching, transcript, profile and evidence semantics from a session', () => {
     render(<App initialDemo />)
