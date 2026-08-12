@@ -1,10 +1,15 @@
 # VaakSetu — AI Sales Coach Project Submission Report
 
-**Assessment:** Quantum Gandiva AI realtime real-estate sales coach  
-**Implementation date:** 2026-08-12  
-**Repository:** [Ajey95/VaakSetu](https://github.com/Ajey95/VaakSetu)  
-**Frontend:** [vaaksetu-psi.vercel.app](https://vaaksetu-psi.vercel.app)  
-**Backend:** [vaaksetu-api.onrender.com](https://vaaksetu-api.onrender.com)  
+**Assessment:** Quantum Gandiva AI realtime real-estate sales coach
+
+**Implementation date:** 2026-08-12
+
+**Repository:** [Ajey95/VaakSetu](https://github.com/Ajey95/VaakSetu)
+
+**Frontend:** [vaaksetu-psi.vercel.app](https://vaaksetu-psi.vercel.app)
+
+**Backend:** [vaaksetu-api.onrender.com](https://vaaksetu-api.onrender.com)
+
 **Status:** Code, automated evidence, deployment, and submission documentation complete; final two-human live-call acceptance rehearsal pending
 
 ## 1. Executive summary
