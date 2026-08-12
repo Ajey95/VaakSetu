@@ -39,10 +39,15 @@ class EventType(StrEnum):
     CALL_FAILED = "call.failed"
     STT_PARTIAL = "stt.partial"
     STT_FINAL = "stt.final"
+    CONVERSATION_STAGE_CHANGED = "conversation.stage_changed"
+    CONTEXT_LOOKUP_STARTED = "context.lookup.started"
+    CONTEXT_LOOKUP_COMPLETED = "context.lookup.completed"
+    EVIDENCE_VERIFIED = "evidence.verified"
     COACH_FAST_READY = "coach.fast.ready"
     COACH_DEEP_READY = "coach.deep.ready"
     SUMMARY_READY = "summary.ready"
     SYSTEM_DEGRADED = "system.degraded"
+    SYSTEM_RECOVERED = "system.recovered"
 
 
 class Utterance(BaseModel):
