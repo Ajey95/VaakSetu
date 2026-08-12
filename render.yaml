@@ -1,0 +1,61 @@
+services:
+  - type: web
+    name: vaaksetu-api
+    runtime: python
+    plan: free
+    buildCommand: pip install uv && uv sync --project apps/api --frozen --no-dev
+    startCommand: uv run --project apps/api uvicorn app.main:app --app-dir apps/api --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.13
+      - key: APP_ENV
+        value: production
+      - key: APP_MODE
+        value: synthetic
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_API_KEY
+        sync: false
+      - key: TWILIO_API_SECRET
+        sync: false
+      - key: TWILIO_TWIML_APP_SID
+        sync: false
+      - key: TWILIO_CALLER_ID
+        sync: false
+      - key: STT_PROVIDER
+        value: deepgram
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: NEO4J_URI
+        sync: false
+      - key: NEO4J_USERNAME
+        sync: false
+      - key: NEO4J_PASSWORD
+        sync: false
+      - key: LANGSMITH_API_KEY
+        sync: false
+      - key: LANGSMITH_TRACING
+        value: "true"
+      - key: LANGSMITH_PROJECT
+        value: qga-ai-sales-coach
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        sync: false
+      - key: EXTERNAL_DATA_MODE
+        value: real
+      - key: GENERAL_SEARCH_API_KEY
+        sync: false

@@ -4,7 +4,7 @@ Verified on 2026-08-12 in `APP_MODE=synthetic` on Windows/PowerShell.
 
 ## Passing evidence
 
-- Backend unit/integration suite: 109 tests passing.
+- Backend unit/integration suite: 110 tests passing.
 - Frontend component/contract suite: 15 tests passing.
 - TypeScript typecheck and Vite production build passing.
 - Playwright desktop and Pixel 7 checks: 4 tests passing with no horizontal overflow.
