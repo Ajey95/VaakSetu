@@ -1,0 +1,2 @@
+"""Structured LLM provider boundary."""
+
