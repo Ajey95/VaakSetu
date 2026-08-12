@@ -1,6 +1,16 @@
 import time
 from fastapi.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
+import pytest
 from app.main import create_app
+
+
+def test_media_websocket_rejects_unknown_call_correlation():
+    with TestClient(create_app()) as client:
+        with pytest.raises(WebSocketDisconnect) as closed:
+            with client.websocket_connect("/ws/media/unknown-call") as socket:
+                socket.receive_json()
+        assert closed.value.code == 4404
 
 
 def test_ui_websocket_reconnect_starts_with_full_snapshot_and_receives_live_events():
@@ -14,6 +24,9 @@ def test_ui_websocket_reconnect_starts_with_full_snapshot_and_receives_live_even
                 "text": "The asking price feels too high", "is_final": True})
             event = socket.receive_json()
             assert event["type"] == "stt.final"
+            state = socket.receive_json()
+            assert state["type"] == "conversation.state.updated"
+            assert state["payload"]["stage"] == "objection_handling"
             coach = socket.receive_json()
             assert coach["type"] == "coach.fast.ready"
             assert "price concern" in coach["payload"]["next_move"].lower()
@@ -34,4 +47,3 @@ def test_external_lookup_refines_after_fast_coach_without_changing_speaker_label
         assert snapshot["evidence"][0]["source_title"].endswith("(synthetic fixture)")
         assert snapshot["recommendations"][0]["type"] == "fast"
         assert snapshot["recommendations"][-1]["type"] == "deep"
-

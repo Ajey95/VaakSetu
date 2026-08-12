@@ -6,6 +6,9 @@ from app.streaming.media import MediaPacket, MediaSequencer, PacketDecision, map
 
 
 async def media_socket(websocket: WebSocket, call_id: str) -> None:
+    if call_id not in websocket.app.state.calls._call_sessions:
+        await websocket.close(code=4404)
+        return
     await websocket.accept()
     sequencer = MediaSequencer()
     try:
@@ -25,12 +28,15 @@ async def media_socket(websocket: WebSocket, call_id: str) -> None:
             decision = sequencer.accept(packet)
             if decision in {PacketDecision.DUPLICATE, PacketDecision.OUT_OF_ORDER}:
                 continue
+            if decision is PacketDecision.GAP:
+                websocket.app.state.calls.record_media_gap(call_id)
             speaker = map_twilio_track(packet.track)
             if manager:
                 try:
                     await manager.send_audio(speaker, packet.payload, packet.sequence, packet.timestamp_ms)
                 except Exception:
                     try:
+                        websocket.app.state.calls.record_stt_reconnect(call_id)
                         await manager.reconnect(speaker)
                     except Exception:
                         pass

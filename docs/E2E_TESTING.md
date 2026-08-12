@@ -1,3 +1,3 @@
 # E2E and Fault Testing
 
-Run the commands in README. Playwright checks the accepted 1536x1024 desktop surface and Pixel 7 responsive surface with no horizontal overflow. `scripts/fault_injection.py` exercises all 13 PRD fault cases; each must leave call status connected. The final real rehearsal follows all 35 SSOT acceptance steps and records actual carrier/STT/LLM latencies.
+Run the commands in README. Playwright checks the accepted 1536x1024 desktop surface and Pixel 7 responsive surface with no horizontal overflow. `scripts/fault_injection.py` behaviorally exercises all 13 PRD fault cases; each must leave call status connected. Backend integration tests cover speaker mapping, partial/final transcript flow, fast-before-lookup ordering, RAG/evidence refinement, reconnect snapshots, duplicate completion idempotency and two-call memory. The final real rehearsal follows all 35 SSOT acceptance steps and records actual carrier/STT/LLM latencies.

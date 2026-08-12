@@ -14,3 +14,12 @@ class DeepCoach:
         return Recommendation(id=f"rec_{uuid4().hex[:10]}", type="deep", next_move=output["next_move"],
             reason=output["reason"], confidence="high", lifecycle="refined", evidence_ids=[item.id for item in evidence])
 
+    async def recommend_with_knowledge(self, state: ConversationState, fast: Recommendation,
+                                       knowledge: list[dict]) -> Recommendation:
+        output = await self.llm.complete_structured("knowledge_coach", {
+            "state": state.model_dump(mode="json"),
+            "fast_recommendation": fast.model_dump(mode="json"),
+            "internal_knowledge": knowledge,
+        }, {"next_move": str, "reason": str})
+        return Recommendation(id=f"rec_{uuid4().hex[:10]}", type="deep", next_move=output["next_move"],
+            reason=f"Internal playbook: {output['reason']}", confidence="high", lifecycle="refined")

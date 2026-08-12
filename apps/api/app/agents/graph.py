@@ -90,3 +90,13 @@ class IntelligenceGraph:
         result = await self.compiled.ainvoke({"state": state, "text": text, "trigger": trigger})
         return IntelligenceResult(result["fast"], result.get("evidence", []), result.get("deep"))
 
+    def fast_recommend(self, state: ConversationState, trigger: str) -> Recommendation:
+        return self.fast.recommend(state, trigger)
+
+    async def refine(self, state: ConversationState, text: str, trigger: str,
+                     fast: Recommendation) -> IntelligenceResult:
+        research = await self._research_node({"state": state, "text": text, "trigger": trigger, "fast": fast})
+        evidence = research.get("evidence", [])
+        deep = await self._deep_node({"state": state, "text": text, "trigger": trigger,
+                                      "fast": fast, "evidence": evidence})
+        return IntelligenceResult(fast, evidence, deep.get("deep"))

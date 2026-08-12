@@ -1,8 +1,10 @@
 from app.config import AppMode, Settings
+from pydantic import ValidationError
+import pytest
 
 
 def test_synthetic_mode_reports_missing_provider_credentials_without_blocking_startup():
-    settings = Settings(app_mode=AppMode.SYNTHETIC)
+    settings = Settings(_env_file=None, app_mode=AppMode.SYNTHETIC)
 
     report = settings.provider_readiness()
 
@@ -13,7 +15,7 @@ def test_synthetic_mode_reports_missing_provider_credentials_without_blocking_st
 
 
 def test_real_mode_marks_missing_telephony_credentials_as_blocking():
-    settings = Settings(app_mode=AppMode.REAL)
+    settings = Settings(_env_file=None, app_mode=AppMode.REAL)
 
     report = settings.provider_readiness()
 
@@ -24,7 +26,7 @@ def test_real_mode_marks_missing_telephony_credentials_as_blocking():
 
 
 def test_optional_data_services_never_block_realtime_startup():
-    settings = Settings(app_mode=AppMode.REAL)
+    settings = Settings(_env_file=None, app_mode=AppMode.REAL)
 
     report = settings.provider_readiness()
 
@@ -34,8 +36,14 @@ def test_optional_data_services_never_block_realtime_startup():
 
 
 def test_official_uk_external_data_needs_no_general_search_key():
-    settings = Settings(app_mode=AppMode.REAL, external_data_mode="real")
+    settings = Settings(_env_file=None, app_mode=AppMode.REAL, external_data_mode="real")
     readiness = settings.provider_readiness()["external_data"]
     assert readiness.configured is True
     assert readiness.mode == "official_uk"
     assert readiness.missing == ()
+
+
+def test_data_retention_is_explicit_and_bounded():
+    assert Settings(_env_file=None).data_retention_days == 90
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, data_retention_days=0)

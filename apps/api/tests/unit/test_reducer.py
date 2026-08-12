@@ -76,3 +76,12 @@ def test_natural_mortgage_and_flood_phrasing_still_produce_typed_state():
     flood = apply_final_utterance(mortgage.state, utterance("I am worried this area floods", sequence=2))
     assert mortgage.state.customer["mortgage_approval"]["value"] == "approved"
     assert flood.state.external_claims[-1]["topic"] == "environment"
+
+
+def test_customer_sentiment_is_derived_from_final_language_without_llm():
+    positive = apply_final_utterance(ConversationState(call_id="call-1"),
+                                     utterance("I love this place and it looks great"))
+    negative = apply_final_utterance(positive.state,
+                                     utterance("I am worried and disappointed by the price", sequence=2))
+    assert positive.state.sentiment == "positive"
+    assert negative.state.sentiment == "negative"

@@ -39,6 +39,7 @@ class EventType(StrEnum):
     CALL_FAILED = "call.failed"
     STT_PARTIAL = "stt.partial"
     STT_FINAL = "stt.final"
+    CONVERSATION_STATE_UPDATED = "conversation.state.updated"
     CONVERSATION_STAGE_CHANGED = "conversation.stage_changed"
     CONTEXT_LOOKUP_STARTED = "context.lookup.started"
     CONTEXT_LOOKUP_COMPLETED = "context.lookup.completed"
@@ -128,6 +129,7 @@ class SessionSnapshot(BaseModel):
     external_context: list[dict[str, Any]] = Field(default_factory=list)
     evidence: list[Evidence] = Field(default_factory=list)
     summary: CallSummary | None = None
+    pre_call_brief: dict[str, Any] | None = None
 
 
 class AppEvent(BaseModel):

@@ -21,6 +21,7 @@ class Session:
     recommendations: list[Recommendation] = field(default_factory=list)
     evidence: list[Evidence] = field(default_factory=list)
     summary: CallSummary | None = None
+    pre_call_brief: dict | None = None
 
 
 class InMemorySessionStore:
@@ -76,4 +77,5 @@ class InMemorySessionStore:
                 health=dict(session.health), transcript=list(session.transcript),
                 conversation_state=session.conversation.model_copy(deep=True), recommendations=list(session.recommendations),
                 external_context=list(session.conversation.external_context), evidence=list(session.evidence), summary=session.summary,
+                pre_call_brief=session.pre_call_brief,
             )

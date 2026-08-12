@@ -33,6 +33,16 @@ def apply_final_utterance(state: ConversationState, utterance: Utterance) -> Con
     changes: list[str] = []
     invalidation: list[str] = []
     customer = updated.customer
+    if utterance.speaker is Speaker.CUSTOMER:
+        if re.search(r"\b(love|great|excellent|happy|keen|perfect|excited)\b", lower):
+            updated.sentiment = "positive"
+            changes.append("sentiment")
+        elif re.search(r"\b(worried|disappointed|unhappy|concerned|frustrated|bad|poor)\b", lower):
+            updated.sentiment = "negative"
+            changes.append("sentiment")
+        elif re.search(r"\b(okay|fine|understand|maybe|consider)\b", lower):
+            updated.sentiment = "neutral"
+            changes.append("sentiment")
 
     if re.search(r"\b(buyer|buy|buying|looking for|searching for)\b", lower):
         updated.call_type = "buyer"

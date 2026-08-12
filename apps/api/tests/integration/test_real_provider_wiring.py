@@ -4,7 +4,12 @@ from app.config import AppMode, Settings
 from app.main import create_app
 from app.memory.relational import PostgreSQLCallRepository
 from app.memory.temporal_graph import Neo4jTemporalGraphStore
+from app.memory.relational import InMemoryCallRepository
+from app.memory.temporal_graph import InMemoryTemporalGraphStore
 from twilio.request_validator import RequestValidator
+import asyncio
+import pytest
+from app.services.call_service import CallService
 
 
 def real_settings() -> Settings:
@@ -12,7 +17,7 @@ def real_settings() -> Settings:
         twilio_account_sid="AC"+"1"*32, twilio_auth_token="a"*32, twilio_api_key="SK"+"2"*32,
         twilio_api_secret="s"*32, twilio_twiml_app_sid="AP"+"3"*32, twilio_caller_id="+442079460123",
         deepgram_api_key="dg-secret", llm_provider="openai", llm_api_key="llm-secret", llm_model="gpt-test",
-        external_data_mode="real")
+        external_data_mode="real", database_url="", neo4j_uri="", neo4j_username="", neo4j_password="")
 
 
 def twilio_post(client: TestClient, path: str, data: dict):
@@ -41,6 +46,16 @@ def test_twilio_status_callback_updates_existing_call_without_intelligence_depen
         assert client.get("/calls/CA123").json()["call"]["status"] == "connected"
         assert twilio_post(client, "/twilio/status", {"CallSid":"CA123","CallStatus":"completed"}).status_code == 204
         assert client.get("/calls/CA123").json()["call"]["status"] == "ended"
+
+
+def test_duplicate_completed_callbacks_persist_one_call_summary():
+    with TestClient(create_app(real_settings())) as client:
+        twilio_post(client, "/twilio/voice", {"To":"07700 900123","CallSid":"CA123"})
+        for _ in range(2):
+            assert twilio_post(client, "/twilio/status", {
+                "CallSid":"CA123", "CallStatus":"completed"}).status_code == 204
+        customer_id = client.get("/calls/CA123").json()["call"]["customer_id"]
+        assert len(client.get(f"/customers/{customer_id}/history").json()) == 1
 
 
 def test_child_leg_status_is_correlated_to_registered_parent_call():
@@ -72,3 +87,30 @@ def test_configured_persistence_credentials_select_durable_adapters():
     with TestClient(create_app(settings)) as client:
         assert isinstance(client.app.state.calls.repository, PostgreSQLCallRepository)
         assert isinstance(client.app.state.calls.graph_store, Neo4jTemporalGraphStore)
+
+
+def test_synthetic_mode_never_connects_optional_durable_services_from_local_env():
+    settings = real_settings().model_copy(update={
+        "app_mode": AppMode.SYNTHETIC,
+        "database_url": "postgresql+asyncpg://unavailable/coach",
+        "neo4j_uri": "bolt://unavailable:7687", "neo4j_username": "neo4j", "neo4j_password": "secret",
+    })
+    with TestClient(create_app(settings)) as client:
+        assert isinstance(client.app.state.calls.repository, InMemoryCallRepository)
+        assert isinstance(client.app.state.calls.graph_store, InMemoryTemporalGraphStore)
+
+
+@pytest.mark.asyncio
+async def test_pre_call_memory_lookup_never_blocks_real_call_registration():
+    service = CallService(real_settings())
+
+    async def slow_brief(customer_id: str):
+        await asyncio.sleep(.2)
+        return {"customer_id": customer_id, "known": ["Prior fact"]}
+
+    service.memory.pre_call_brief = slow_brief
+    await asyncio.wait_for(service.register_real_call("CA_FAST", "07700 900123"), timeout=.05)
+    snapshot = await service.snapshot("CA_FAST")
+    assert snapshot.call["status"] == "dialing"
+    assert snapshot.pre_call_brief is None
+    await service.close()

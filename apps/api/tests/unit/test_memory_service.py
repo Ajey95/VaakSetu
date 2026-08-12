@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import pytest
 from app.agents.memory_agent import MemoryAgent
 from app.memory.relational import InMemoryCallRepository
@@ -46,3 +47,23 @@ async def test_database_or_graph_failure_does_not_mutate_live_state():
     assert result.relational_saved is False
     assert result.graph_queued is False
     assert state.stage == "connected"
+
+
+@pytest.mark.asyncio
+async def test_persistence_failures_emit_correlated_categorized_logs(caplog):
+    caplog.set_level(logging.WARNING)
+    state = ConversationState(call_id="call-1", customer={"budget": {
+        "value": 450000, "utterance_id": "utt-1"}})
+    database_failure = MemoryService(InMemoryCallRepository(fail=True), InMemoryTemporalGraphStore())
+    await database_failure.persist_call("call-1", "customer-1", state, CallSummary())
+    graph_failure = MemoryService(InMemoryCallRepository(), InMemoryTemporalGraphStore(fail=True))
+    await graph_failure.persist_call("call-1", "customer-1", state, CallSummary())
+    await asyncio.gather(*graph_failure.graph_tasks)
+
+    records = {getattr(record, "event", ""): record for record in caplog.records}
+    assert {"database_write_failed", "graph_write_failed"} <= set(records)
+    for record in records.values():
+        assert record.trace_id == "trace_call-1"
+        assert record.call_id == "call-1"
+        assert record.retryable is True
+        assert record.degraded_capability == "follow_up_memory"

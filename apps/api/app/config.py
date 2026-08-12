@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     langsmith_api_key: str | None = None
     langsmith_tracing: bool = False
     otel_exporter_otlp_endpoint: str | None = None
+    data_retention_days: int = Field(default=90, ge=1, le=3650)
 
     def provider_readiness(self) -> dict[str, ProviderReadiness]:
         required: dict[str, tuple[str, ...]] = {

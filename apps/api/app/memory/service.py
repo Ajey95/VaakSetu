@@ -1,12 +1,22 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from app.memory.relational import CallRepository
 from app.memory.temporal_graph import TemporalFact, TemporalGraphStore
 from app.models.contracts import CallSummary, ConversationState
+
+
+logger = logging.getLogger("sales_coach.memory")
+
+
+def _log_failure(event: str, call_id: str, component: str) -> None:
+    logger.warning(event, extra={"event": event, "trace_id": f"trace_{call_id}",
+        "call_id": call_id, "component": component, "retryable": True,
+        "degraded_capability": "follow_up_memory"})
 
 
 @dataclass
@@ -25,6 +35,7 @@ class MemoryService:
         try:
             await self.repository.save_call(call_id, customer_id, summary)
         except Exception:
+            _log_failure("database_write_failed", call_id, "database")
             return PersistenceResult(False, False)
         queued = False
         for predicate, item in state.customer.items():
@@ -43,20 +54,25 @@ class MemoryService:
                 fact = TemporalFact(entity_id=customer_id, predicate=predicate, value=value["value"],
                     valid_from=valid_from,
                     source_event_id=value.get("utterance_id", call_id))
-                task = asyncio.create_task(self._safe_graph_write(fact))
+                task = asyncio.create_task(self._safe_graph_write(fact, call_id))
                 self.graph_tasks.add(task)
                 task.add_done_callback(self.graph_tasks.discard)
                 queued = True
         return PersistenceResult(True, queued)
 
-    async def _safe_graph_write(self, fact: TemporalFact) -> None:
+    async def _safe_graph_write(self, fact: TemporalFact, call_id: str) -> None:
         try:
             await self.graph.upsert_fact(fact)
         except Exception:
-            pass
+            _log_failure("graph_write_failed", call_id, "graph")
 
     async def pre_call_brief(self, customer_id: str) -> dict:
-        latest = await self.repository.latest_for_customer(customer_id)
+        try:
+            latest = await self.repository.latest_for_customer(customer_id)
+        except Exception:
+            _log_failure("database_read_failed", customer_id, "database")
+            return {"customer_id": customer_id, "known": [], "source_call_id": None,
+                    "degraded": "persistence_unavailable"}
         if not latest:
             return {"customer_id": customer_id, "known": [], "source_call_id": None}
         summary = latest.summary

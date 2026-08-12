@@ -40,7 +40,12 @@ export interface SessionSnapshot {
   call: Record<string, unknown>; health: Record<string, unknown>; transcript: Utterance[]
   conversation_state: ConversationState; recommendations: Recommendation[]
   external_context: Record<string, unknown>[]; evidence: Evidence[]; summary: CallSummary | null
+  pre_call_brief?: PreCallBrief | null
 }
+
+export interface PreCallBrief { customer_id: string; known: string[]; source_call_id: string | null;
+  last_contact?: string; last_concern?: string[]; last_commitment?: string[]; unresolved?: string[];
+  suggested_opening?: string; do_not_repeat?: string[] }
 
 export interface AppEvent {
   type: string; event_id: string; timestamp: string; trace_id: string

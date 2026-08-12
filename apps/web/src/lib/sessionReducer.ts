@@ -1,4 +1,4 @@
-import type { SessionSnapshot, Utterance, Recommendation, Evidence } from '../types/contracts'
+import type { SessionSnapshot, Utterance, Recommendation, Evidence, ConversationState } from '../types/contracts'
 
 export type ClientSession = SessionSnapshot & { processedEvents: Set<string> }
 
@@ -16,6 +16,13 @@ export function sessionReducer(state: ClientSession, action: SessionAction): Cli
   if (action.event_id) events.add(action.event_id)
   if (action.type === 'session.snapshot') return { ...(action.payload as unknown as SessionSnapshot), processedEvents: events }
   if (action.type === 'call.status') return { ...state, call: { ...state.call, ...(action.payload as object) }, processedEvents: events }
+  if (action.type === 'conversation.state.updated') { const conversation = action.payload as ConversationState; const current = conversation.current_recommendation; return { ...state,
+    conversation_state: conversation,
+    recommendations: current ? state.recommendations.map(item=>item.id===current.id?current:item) : state.recommendations,
+    processedEvents: events } }
+  if (action.type === 'context.lookup.started') return { ...state, health: { ...state.health, data: 'connecting' }, processedEvents: events }
+  if (action.type === 'context.lookup.completed') return { ...state, health: { ...state.health,
+    data: (action.payload as { status?: string }).status === 'verified' ? 'live' : 'degraded' }, processedEvents: events }
   if (action.type === 'stt.partial') {
     const incoming = action.payload as unknown as Utterance
     const transcript = state.transcript.filter((item) => item.is_final || item.speaker !== incoming.speaker)

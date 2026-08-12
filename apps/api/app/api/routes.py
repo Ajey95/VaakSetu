@@ -124,9 +124,7 @@ async def history(customer_id: str, request: Request): return await request.app.
 
 @router.post("/recommendations/{recommendation_id}/feedback", status_code=201)
 async def feedback(recommendation_id: str, body: FeedbackRequest, request: Request):
-    item = {"recommendation_id": recommendation_id, **body.model_dump()}
-    request.app.state.calls.feedback.append(item)
-    return item
+    return request.app.state.calls.record_feedback(recommendation_id, body.useful, body.reason)
 
 
 @router.get("/evidence/{evidence_id}")

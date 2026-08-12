@@ -5,9 +5,11 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExport
 
 
 def configure_tracing(console: bool = False):
+    current = trace.get_tracer_provider()
+    if isinstance(current, TracerProvider):
+        return trace.get_tracer("ai-sales-coach")
     provider = TracerProvider(resource=Resource.create({"service.name": "ai-sales-coach"}))
     if console:
         provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
     trace.set_tracer_provider(provider)
     return trace.get_tracer("ai-sales-coach")
-

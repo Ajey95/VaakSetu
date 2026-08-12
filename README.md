@@ -17,7 +17,7 @@ uv run --project apps/api uvicorn app.main:app --app-dir apps/api --reload --por
 npm --workspace apps/web run dev
 ```
 
-Open `http://localhost:5173`. Default `APP_MODE=synthetic` is visibly labeled and is for deterministic development only. For live mode, populate the Twilio, Deepgram, LLM, PostgreSQL and Neo4j variables in `.env`, expose port 8000 through HTTPS/WSS, set `PUBLIC_BASE_URL`, configure the TwiML App Voice URL as `/twilio/voice`, verify the destination number on a Twilio trial, and set `APP_MODE=real` plus `EXTERNAL_DATA_MODE=real`. The included official UK source adapter does not require `GENERAL_SEARCH_API_KEY`; that variable is reserved for an optional general-search adapter.
+Open `http://localhost:5173`. Default `APP_MODE=synthetic` is visibly labeled and is for deterministic development only. The UI shows readiness separately for Twilio, STT, LLM, database, graph and external data. For live mode, populate the Twilio, Deepgram, LLM, PostgreSQL and Neo4j variables in `.env`, expose port 8000 through HTTPS/WSS, set `PUBLIC_BASE_URL`, configure the TwiML App Voice URL as `/twilio/voice`, verify the destination number on a Twilio trial, and set `APP_MODE=real` plus `EXTERNAL_DATA_MODE=real`. The included official UK source adapter does not require `GENERAL_SEARCH_API_KEY`; that variable is reserved for an optional general-search adapter.
 
 ## Service choices
 
@@ -40,8 +40,8 @@ uv run --project apps/api python scripts/run_evals.py
 uv run --project apps/api python scripts/fault_injection.py
 ```
 
-See [domain research](docs/DOMAIN_RESEARCH_AND_PROMPT_DESIGN.md), [system design](docs/SYSTEM_DESIGN.md), [demo script](docs/DEMO_SCRIPT.md), [limitations](docs/LIMITATIONS.md), and [synthetic disclosure](docs/SYNTHETIC_DATA.md).
+See [domain research](docs/DOMAIN_RESEARCH_AND_PROMPT_DESIGN.md), [system design](docs/SYSTEM_DESIGN.md), [demo script](docs/DEMO_SCRIPT.md), [limitations](docs/LIMITATIONS.md), [synthetic disclosure](docs/SYNTHETIC_DATA.md), and the [SSOT requirement matrix](docs/SSOT_REQUIREMENT_MATRIX.md).
 
 ## Known limits
 
-Real calls and provider latency cannot be certified without credentials and a public HTTPS/WSS endpoint. Trial calls reach only verified numbers. The real external adapter currently implements an official UK market-source boundary and abstains for unsupported topics; add official provider adapters before claiming those topics verified. Audio is not stored. This is one-call, outbound-only prototype scope.
+Real calls and provider latency cannot be certified without credentials and a public HTTPS/WSS endpoint. Trial calls reach only verified numbers. The real external adapter currently implements an official UK market-source boundary and abstains for unsupported topics; add official provider adapters before claiming those topics verified. Audio is not stored. Structured application data defaults to `DATA_RETENTION_DAYS=90`; production needs a scheduled deletion worker for that policy. This is one-call, outbound-only prototype scope.
