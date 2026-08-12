@@ -21,6 +21,7 @@ def test_outbound_twiml_streams_both_tracks_then_dials_only_validated_destinatio
     assert stream.attrib["url"] == "wss://coach.example.com/ws/media/call-1"
     assert number is not None and number.text == "+447700900123"
     assert root.find("./Dial").attrib["callerId"] == "+442079460123"
+    assert "action" not in root.find("./Dial").attrib
     assert "secret" not in xml
 
 

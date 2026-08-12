@@ -45,9 +45,7 @@ class TwilioService:
         response = VoiceResponse()
         response.start().stream(url=stream_url, track="both_tracks",
                                 status_callback=f"{self.settings.public_base_url.rstrip('/')}/twilio/stream-status")
-        dial = response.dial(caller_id=self.settings.twilio_caller_id,
-                             action=f"{self.settings.public_base_url.rstrip('/')}/twilio/status",
-                             method="POST")
+        dial = response.dial(caller_id=self.settings.twilio_caller_id)
         dial.number(number, status_callback=f"{self.settings.public_base_url.rstrip('/')}/twilio/status",
                     status_callback_event="initiated ringing answered completed")
         return str(response)
