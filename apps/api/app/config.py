@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     general_search_api_key: str | None = None
     langsmith_api_key: str | None = None
     langsmith_tracing: bool = False
+    langsmith_project: str = "qga-ai-sales-coach"
     otel_exporter_otlp_endpoint: str | None = None
     data_retention_days: int = Field(default=90, ge=1, le=3650)
 

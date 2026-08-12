@@ -1,6 +1,8 @@
 import asyncio
 import logging
+import os
 import pytest
+from app.config import Settings
 from app.evals.service import AsyncEvaluationService
 from app.observability.metrics import Metrics
 from fastapi.testclient import TestClient
@@ -8,6 +10,25 @@ from app.main import create_app
 from app.models.contracts import Speaker
 from app.services.call_service import CallService
 from app.tools.synthetic import SyntheticExternalTool
+
+
+def test_application_startup_exports_langsmith_settings_to_the_tracer_environment(monkeypatch):
+    monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
+    monkeypatch.delenv("LANGSMITH_TRACING", raising=False)
+    monkeypatch.delenv("LANGSMITH_PROJECT", raising=False)
+
+    create_app(
+        Settings(
+            _env_file=None,
+            langsmith_api_key="ls-test-key",
+            langsmith_tracing=True,
+            langsmith_project="sales-coach-test",
+        )
+    )
+
+    assert os.environ["LANGSMITH_API_KEY"] == "ls-test-key"
+    assert os.environ["LANGSMITH_TRACING"] == "true"
+    assert os.environ["LANGSMITH_PROJECT"] == "sales-coach-test"
 
 
 @pytest.mark.asyncio

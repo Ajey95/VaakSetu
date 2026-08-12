@@ -11,12 +11,13 @@ from app.telephony.twilio_service import TwilioService
 from app.websocket.media import media_socket
 from app.websocket.ui import ui_socket
 from app.observability.logging import configure_logging
-from app.observability.tracing import configure_tracing
+from app.observability.tracing import configure_langsmith_environment, configure_tracing
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     selected = settings or Settings()
     configure_logging()
+    configure_langsmith_environment(selected)
     configure_tracing(console=bool(selected.otel_exporter_otlp_endpoint))
 
     @asynccontextmanager
