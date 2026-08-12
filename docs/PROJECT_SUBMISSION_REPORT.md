@@ -114,7 +114,7 @@ flowchart TB
         Fast["Fast Coach"]
     end
 
-    subgraph Async["Asynchronous intelligence"]
+    subgraph AsyncIntel["Asynchronous intelligence"]
         Knowledge["Knowledge Agent / RAG"]
         Research["Context Research Agent"]
         Evidence["Evidence Agent"]
@@ -128,7 +128,7 @@ flowchart TB
         PG[("PostgreSQL + pgvector")]
         KG[("Neo4j temporal graph")]
         Official["Official UK sources + cache"]
-        Obs["Logs + traces + metrics + trajectories")]
+        Obs["Logs + traces + metrics + trajectories"]
     end
 
     UI <--> Reducer
@@ -146,7 +146,9 @@ flowchart TB
     Memory -.-> KG
     State -.-> Eval
     API -.-> Obs
-    Async -.-> Obs
+    Deep -.-> Obs
+    Memory -.-> Obs
+    Eval -.-> Obs
 ```
 
 ### 4.2 Plane separation and failure authority
