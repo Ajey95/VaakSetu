@@ -1,2 +1,1 @@
-export const ModeBanner=()=> <div className="mode-banner" role="status"><strong>Synthetic demonstration</strong><span>No real call or provider claim. Add credentials and set APP_MODE=real for live acceptance.</span></div>
-
+export const ModeBanner=({mode='synthetic'}:{mode?:'synthetic'|'real'})=> <div className={`mode-banner mode-banner--${mode}`} role="status">{mode==='real'?<><strong>Real provider mode</strong><span>Calls and intelligence use configured credential-backed providers.</span></>:<><strong>Synthetic demonstration</strong><span>No real call or provider claim. Add credentials and set APP_MODE=real for live acceptance.</span></>}</div>

@@ -12,6 +12,8 @@ class Session:
     session_id: str
     call_id: str
     customer_id: str | None
+    synthetic: bool = False
+    phone_number: str | None = None
     status: CallStatus = CallStatus.IDLE
     health: dict = field(default_factory=lambda: {"call": "connecting", "media": "connecting", "stt": "connecting", "coach": "connecting", "data": "connecting"})
     transcript: list[Utterance] = field(default_factory=list)
@@ -26,8 +28,10 @@ class InMemorySessionStore:
         self._sessions: dict[str, Session] = {}
         self._locks: dict[str, asyncio.Lock] = {}
 
-    async def create(self, call_id: str, customer_id: str | None) -> Session:
+    async def create(self, call_id: str, customer_id: str | None, *, synthetic: bool = False,
+                     phone_number: str | None = None) -> Session:
         session = Session(session_id=f"session_{uuid4().hex[:12]}", call_id=call_id, customer_id=customer_id,
+                          synthetic=synthetic, phone_number=phone_number,
                           conversation=ConversationState(call_id=call_id, customer_id=customer_id))
         self._sessions[session.session_id] = session
         self._locks[session.session_id] = asyncio.Lock()
@@ -68,7 +72,8 @@ class InMemorySessionStore:
             session = self._sessions[session_id]
             return SessionSnapshot(
                 call={"id": session.call_id, "session_id": session.session_id, "customer_id": session.customer_id,
-                      "status": session.status}, health=dict(session.health), transcript=list(session.transcript),
+                      "status": session.status, "synthetic": session.synthetic, "phone_number": session.phone_number},
+                health=dict(session.health), transcript=list(session.transcript),
                 conversation_state=session.conversation.model_copy(deep=True), recommendations=list(session.recommendations),
                 external_context=list(session.conversation.external_context), evidence=list(session.evidence), summary=session.summary,
             )

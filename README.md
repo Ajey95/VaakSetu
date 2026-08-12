@@ -11,11 +11,13 @@ Copy-Item .env.example .env
 npm install
 uv sync --project apps/api
 docker compose up -d
+# For an existing database volume, apply the idempotent schema once:
+Get-Content apps/api/app/db/migrations/001_initial.sql -Raw | docker compose exec -T postgres psql -U salescoach -d salescoach
 uv run --project apps/api uvicorn app.main:app --app-dir apps/api --reload --port 8000
 npm --workspace apps/web run dev
 ```
 
-Open `http://localhost:5173`. Default `APP_MODE=synthetic` is visibly labeled and is for deterministic development only. For live mode, populate the Twilio, Deepgram, LLM, PostgreSQL and Neo4j variables in `.env`, expose port 8000 through HTTPS/WSS, set `PUBLIC_BASE_URL`, configure the TwiML App Voice URL as `/twilio/voice`, verify the destination number on a Twilio trial, and set `APP_MODE=real` plus `EXTERNAL_DATA_MODE=real`.
+Open `http://localhost:5173`. Default `APP_MODE=synthetic` is visibly labeled and is for deterministic development only. For live mode, populate the Twilio, Deepgram, LLM, PostgreSQL and Neo4j variables in `.env`, expose port 8000 through HTTPS/WSS, set `PUBLIC_BASE_URL`, configure the TwiML App Voice URL as `/twilio/voice`, verify the destination number on a Twilio trial, and set `APP_MODE=real` plus `EXTERNAL_DATA_MODE=real`. The included official UK source adapter does not require `GENERAL_SEARCH_API_KEY`; that variable is reserved for an optional general-search adapter.
 
 ## Service choices
 

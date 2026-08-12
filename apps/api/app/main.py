@@ -10,21 +10,22 @@ from app.services.call_service import CallService
 from app.telephony.twilio_service import TwilioService
 from app.websocket.media import media_socket
 from app.websocket.ui import ui_socket
+from app.observability.logging import configure_logging
+from app.observability.tracing import configure_tracing
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     selected = settings or Settings()
+    configure_logging()
+    configure_tracing(console=bool(selected.otel_exporter_otlp_endpoint))
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         app.state.settings = selected
-        app.state.calls = CallService()
+        app.state.calls = CallService(selected)
         app.state.twilio = TwilioService(selected)
         yield
-        tasks = list(app.state.calls._tasks)
-        if tasks:
-            import asyncio
-            await asyncio.gather(*tasks, return_exceptions=True)
+        await app.state.calls.close()
 
     app = FastAPI(title="AI Sales Coach", version="0.1.0", lifespan=lifespan)
     app.add_middleware(CORSMiddleware, allow_origins=[selected.frontend_url], allow_credentials=True,

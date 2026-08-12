@@ -15,6 +15,7 @@ export function sessionReducer(state: ClientSession, action: SessionAction): Cli
   const events = new Set(state.processedEvents)
   if (action.event_id) events.add(action.event_id)
   if (action.type === 'session.snapshot') return { ...(action.payload as unknown as SessionSnapshot), processedEvents: events }
+  if (action.type === 'call.status') return { ...state, call: { ...state.call, ...(action.payload as object) }, processedEvents: events }
   if (action.type === 'stt.partial') {
     const incoming = action.payload as unknown as Utterance
     const transcript = state.transcript.filter((item) => item.is_final || item.speaker !== incoming.speaker)

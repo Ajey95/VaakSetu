@@ -20,6 +20,8 @@ class CallRepository(ABC):
     async def save_call(self, call_id: str, customer_id: str, summary: CallSummary) -> None: ...
     @abstractmethod
     async def latest_for_customer(self, customer_id: str) -> StoredCall | None: ...
+    @abstractmethod
+    async def history_for_customer(self, customer_id: str) -> list[StoredCall]: ...
 
 
 class InMemoryCallRepository(CallRepository):
@@ -38,6 +40,10 @@ class InMemoryCallRepository(CallRepository):
     async def latest_for_customer(self, customer_id: str) -> StoredCall | None:
         matches = [call for call in self.calls if call.customer_id == customer_id]
         return max(matches, key=lambda call: call.ended_at) if matches else None
+
+    async def history_for_customer(self, customer_id: str) -> list[StoredCall]:
+        return sorted((call for call in self.calls if call.customer_id == customer_id),
+                      key=lambda call: call.ended_at, reverse=True)
 
 
 class PostgreSQLCallRepository(CallRepository):
@@ -66,3 +72,12 @@ class PostgreSQLCallRepository(CallRepository):
             if not row:
                 return None
             return StoredCall(row.call_id, customer_id, CallSummary.model_validate(row.content), row.created_at)
+
+    async def history_for_customer(self, customer_id: str) -> list[StoredCall]:
+        from sqlalchemy import select
+        from app.db.models import CallSummaryRow
+        async with self.session_factory() as session:
+            result = await session.execute(select(CallSummaryRow).where(
+                CallSummaryRow.customer_id == customer_id).order_by(CallSummaryRow.created_at.desc()))
+            return [StoredCall(row.call_id, customer_id, CallSummary.model_validate(row.content), row.created_at)
+                    for row in result.scalars()]

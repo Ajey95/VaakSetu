@@ -32,3 +32,10 @@ def test_optional_data_services_never_block_realtime_startup():
     assert report["graph"].blocking is False
     assert report["external_data"].blocking is False
 
+
+def test_official_uk_external_data_needs_no_general_search_key():
+    settings = Settings(app_mode=AppMode.REAL, external_data_mode="real")
+    readiness = settings.provider_readiness()["external_data"]
+    assert readiness.configured is True
+    assert readiness.mode == "official_uk"
+    assert readiness.missing == ()

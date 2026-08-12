@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException, Request, Response, status
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from app.models.contracts import Speaker, normalize_phone_number
 
@@ -33,15 +34,30 @@ async def twilio_token(body: IdentityRequest, request: Request):
 @router.post("/twilio/voice")
 async def twilio_voice(request: Request):
     form = await request.form()
+    if not request.app.state.twilio.validate_webhook(request.url.path, dict(form),
+                                                     request.headers.get("X-Twilio-Signature")):
+        raise HTTPException(403, "Invalid Twilio signature")
     destination = form.get("To") or form.get("to")
     call_id = form.get("CallSid") or f"call_{__import__('uuid').uuid4().hex[:12]}"
     if not destination:
         raise HTTPException(422, "Missing To")
+    await request.app.state.calls.register_real_call(str(call_id), str(destination))
     return Response(request.app.state.twilio.outbound_twiml(str(destination), str(call_id)), media_type="application/xml")
 
 
 @router.post("/twilio/status", status_code=204)
-async def twilio_status(): return Response(status_code=204)
+async def twilio_status(request: Request):
+    form = await request.form()
+    if not request.app.state.twilio.validate_webhook(request.url.path, dict(form),
+                                                     request.headers.get("X-Twilio-Signature")):
+        raise HTTPException(403, "Invalid Twilio signature")
+    call_id = form.get("ParentCallSid") or form.get("CallSid")
+    provider_status = form.get("CallStatus")
+    if call_id and provider_status:
+        await request.app.state.calls.update_real_call_status(str(call_id), str(provider_status))
+        if str(provider_status) == "completed":
+            await request.app.state.calls.end_call(str(call_id))
+    return Response(status_code=204)
 
 
 @router.post("/twilio/stream-status", status_code=204)
@@ -61,10 +77,15 @@ async def utterance(call_id: str, body: UtteranceRequest, request: Request):
     except KeyError as exc: raise HTTPException(404, "Call not found") from exc
 
 
-@router.post("/demo/calls/{call_id}/end")
+@router.post("/calls/{call_id}/end")
 async def end_call(call_id: str, request: Request):
     try: return await request.app.state.calls.end_call(call_id)
     except KeyError as exc: raise HTTPException(404, "Call not found") from exc
+
+
+@router.post("/demo/calls/{call_id}/end", include_in_schema=False)
+async def end_demo_call(call_id: str, request: Request):
+    return await end_call(call_id, request)
 
 
 @router.post("/demo/calls/{call_id}/faults/{fault}")
@@ -84,6 +105,13 @@ async def call_summary(call_id: str, request: Request):
     snapshot = await call_snapshot(call_id, request)
     if not snapshot.summary: raise HTTPException(404, "Summary not ready")
     return snapshot.summary
+
+
+@router.get("/calls/{call_id}/trajectories")
+async def trajectories(call_id: str, request: Request):
+    if call_id not in request.app.state.calls._call_sessions:
+        raise HTTPException(404, "Call not found")
+    return request.app.state.calls.trajectories.get(call_id, [])
 
 
 @router.get("/customers/{customer_id}/precall-brief")
@@ -112,7 +140,4 @@ async def evidence(evidence_id: str, request: Request):
 
 @router.get("/metrics")
 async def metrics(request: Request):
-    return {"active_calls": sum((await request.app.state.calls.store.get(session_id)).status.value == "connected"
-                                for session_id in request.app.state.calls._call_sessions.values()),
-            "feedback_count": len(request.app.state.calls.feedback)}
-
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)

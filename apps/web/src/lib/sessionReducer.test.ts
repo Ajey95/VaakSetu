@@ -9,6 +9,10 @@ describe('session reducer', () => {
     const snapshot = { ...emptySession, call: { id: 'call-1', status: 'connected' }, transcript: [{ ...utterance, id: 'utt-1', is_final: true }] }
     expect(sessionReducer(emptySession, { type: 'session.snapshot', payload: snapshot }).call.id).toBe('call-1')
   })
+  it('tracks provider call lifecycle before the first backend snapshot arrives', () => {
+    const state = sessionReducer(emptySession, { type: 'call.status', payload: { status: 'ringing' } })
+    expect(state.call.status).toBe('ringing')
+  })
   it('replaces partial speech in place then replaces it with final speech', () => {
     let state = sessionReducer(emptySession, { type: 'stt.partial', payload: utterance })
     state = sessionReducer(state, { type: 'stt.partial', payload: { ...utterance, text: 'My budget is £450,000' } })
@@ -25,4 +29,3 @@ describe('session reducer', () => {
     expect(state.conversation_state.current_recommendation?.lifecycle).toBe('refined')
   })
 })
-

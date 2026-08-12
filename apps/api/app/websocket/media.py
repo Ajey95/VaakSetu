@@ -9,6 +9,10 @@ async def media_socket(websocket: WebSocket, call_id: str) -> None:
     await websocket.accept()
     sequencer = MediaSequencer()
     try:
+        manager = await websocket.app.state.calls.start_stt(call_id)
+    except Exception:
+        manager = None
+    try:
         while True:
             message = await websocket.receive_json()
             if message.get("event") == "stop":
@@ -21,9 +25,16 @@ async def media_socket(websocket: WebSocket, call_id: str) -> None:
             decision = sequencer.accept(packet)
             if decision in {PacketDecision.DUPLICATE, PacketDecision.OUT_OF_ORDER}:
                 continue
-            # The provider-specific STT manager is attached by the real call lifecycle once credentials are configured.
-            # Keeping this socket transport-only ensures packet faults cannot control the Twilio call.
-            map_twilio_track(packet.track)
+            speaker = map_twilio_track(packet.track)
+            if manager:
+                try:
+                    await manager.send_audio(speaker, packet.payload, packet.sequence, packet.timestamp_ms)
+                except Exception:
+                    try:
+                        await manager.reconnect(speaker)
+                    except Exception:
+                        pass
     except WebSocketDisconnect:
         pass
-
+    finally:
+        await websocket.app.state.calls.stop_stt(call_id)

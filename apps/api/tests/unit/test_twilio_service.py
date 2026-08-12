@@ -35,3 +35,14 @@ def test_synthetic_token_is_explicit_and_real_mode_generates_jwt():
     assert synthetic == {"mode": "synthetic", "token": None, "identity": "agent-1"}
     assert real["mode"] == "real" and real["token"].count(".") == 2
     assert "api-secret" not in real["token"]
+
+
+def test_real_webhook_signature_validation_uses_public_callback_url():
+    from twilio.request_validator import RequestValidator
+    settings = real_settings()
+    form = {"To":"07700 900123", "CallSid":"CA123"}
+    signature = RequestValidator(settings.twilio_auth_token).compute_signature(
+        "https://coach.example.com/twilio/voice", form)
+    service = TwilioService(settings)
+    assert service.validate_webhook("/twilio/voice", form, signature) is True
+    assert service.validate_webhook("/twilio/voice", form, "invalid") is False

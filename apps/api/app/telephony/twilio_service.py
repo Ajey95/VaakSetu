@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from twilio.jwt.access_token import AccessToken
 from twilio.jwt.access_token.grants import VoiceGrant
 from twilio.twiml.voice_response import VoiceResponse
+from twilio.request_validator import RequestValidator
 
 from app.config import AppMode, Settings
 from app.models.contracts import normalize_phone_number
@@ -26,6 +27,14 @@ class TwilioService:
             encoded = encoded.decode("utf-8")
         return {"mode": "real", "token": encoded, "identity": identity}
 
+    def validate_webhook(self, path: str, form: dict[str, str], signature: str | None) -> bool:
+        if self.settings.app_mode is AppMode.SYNTHETIC:
+            return True
+        if not signature or not self.settings.twilio_auth_token:
+            return False
+        url = f"{self.settings.public_base_url.rstrip('/')}/{path.lstrip('/')}"
+        return RequestValidator(self.settings.twilio_auth_token).validate(url, form, signature)
+
     def outbound_twiml(self, destination: str, call_id: str) -> str:
         number = normalize_phone_number(destination)
         parsed = urlparse(self.settings.public_base_url)
@@ -42,4 +51,3 @@ class TwilioService:
         dial.number(number, status_callback=f"{self.settings.public_base_url.rstrip('/')}/twilio/status",
                     status_callback_event="initiated ringing answered completed")
         return str(response)
-

@@ -59,9 +59,10 @@ class Neo4jTemporalGraphStore(TemporalGraphStore):
 
     async def upsert_fact(self, fact: TemporalFact) -> None:
         query = """
-        MATCH (e:Entity {id: $entity_id})-[old:HAS_FACT {predicate: $predicate, current: true}]->(:Fact)
-        SET old.current = false, old.valid_to = $valid_from
-        WITH e
+        MATCH (e:Entity {id: $entity_id})
+        OPTIONAL MATCH (e)-[old:HAS_FACT {predicate: $predicate, current: true}]->(:Fact)
+        FOREACH (_ IN CASE WHEN old IS NULL THEN [] ELSE [1] END |
+            SET old.current = false, old.valid_to = $valid_from)
         CREATE (f:Fact {value: $value, observed_at: $observed_at, source_event_id: $source_event_id})
         CREATE (e)-[:HAS_FACT {predicate: $predicate, current: true, valid_from: $valid_from}]->(f)
         """

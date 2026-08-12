@@ -9,14 +9,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  health: () => request<{ status: string; mode: 'synthetic' | 'real' }>('/health'),
   providers: () => request<Record<string, { configured: boolean; blocking: boolean; mode: string }>>('/health/providers'),
   startDemo: (phone_number: string, customer_id?: string) => request<SessionSnapshot>('/demo/calls', { method: 'POST', body: JSON.stringify({ phone_number, customer_id }) }),
   utterance: (callId: string, speaker: string, text: string, is_final = true) => request(`/demo/calls/${callId}/utterances`, { method: 'POST', body: JSON.stringify({ speaker, text, is_final }) }),
-  endDemo: (callId: string) => request<SessionSnapshot>(`/demo/calls/${callId}/end`, { method: 'POST' }),
+  endCall: (callId: string) => request<SessionSnapshot>(`/calls/${callId}/end`, { method: 'POST' }),
   snapshot: (callId: string) => request<SessionSnapshot>(`/calls/${callId}`),
   token: (identity: string) => request<{ mode: string; token: string | null }>('/twilio/token', { method: 'POST', body: JSON.stringify({ identity }) }),
   feedback: (id: string, useful: boolean) => request(`/recommendations/${id}/feedback`, { method: 'POST', body: JSON.stringify({ useful }) }),
 }
 
 export const wsUrl = (callId: string) => `${API.replace(/^http/, 'ws')}/ws/ui/${callId}`
-

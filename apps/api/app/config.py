@@ -92,6 +92,10 @@ class Settings(BaseSettings):
         realtime = {"twilio", "stt", "llm"}
         report: dict[str, ProviderReadiness] = {}
         for provider, names in required.items():
+            if provider == "external_data" and self.external_data_mode == "real":
+                report[provider] = ProviderReadiness(
+                    configured=True, blocking=False, mode="official_uk", missing=())
+                continue
             missing = tuple(name for name in names if not values[name])
             report[provider] = ProviderReadiness(
                 configured=not missing,
@@ -100,4 +104,3 @@ class Settings(BaseSettings):
                 missing=missing,
             )
         return report
-
